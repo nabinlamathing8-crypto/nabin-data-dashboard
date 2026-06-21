@@ -46,8 +46,8 @@ st.markdown("""
   .badge-green { background: #f0fdf4; color: #16a34a; }
   .badge-amber { background: #fffbeb; color: #b45309; }
 
-  .hero-title { font-size: 2.6rem; font-weight: 700; color: #0f172a; line-height: 1.2; }
-  .hero-sub   { font-size: 1.1rem; color: #64748b; margin-top: 0.5rem; }
+  .hero-title { font-size: 2.6rem; font-weight: 700; color: #ffffff; line-height: 1.2; }
+  .hero-sub   { font-size: 1.1rem; color: #cbd5e1; margin-top: 0.5rem; }
 
   .section-label {
     font-size: 11px; font-weight: 600; letter-spacing: 0.1em;
@@ -92,7 +92,7 @@ st.markdown("""
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown("## 📊 Nabin Lama")
+    st.markdown("## 📊 Nabin Kumar Thing")
     st.markdown("*Data Science Learner*")
     st.markdown("---")
     page = st.radio(
@@ -113,7 +113,7 @@ if page == "🏠  Home":
         st.markdown("""
         <div style='padding-top:2rem'>
           <p class='section-label'>Welcome to my portfolio</p>
-          <p class='hero-title'>Hi, I'm Nabin Lama 👋</p>
+          <p class='hero-title'>Hi, I'm Nabin Kumar Thing 👋</p>
           <p class='hero-sub'>
             Aspiring Data Scientist focused on Python, data visualization,<br>
             and machine learning — turning raw data into clear insights.
@@ -136,7 +136,7 @@ if page == "🏠  Home":
                       font-size:3.5rem;margin:0 auto;'>
             🧑‍💻
           </div>
-          <p style='color:#64748b;font-size:14px;margin-top:12px'>Nabin Lama<br>Data Science Learner</p>
+          <p style='color:#64748b;font-size:14px;margin-top:12px'>Nabin Kumar Thing<br>Data Science Learner</p>
         </div>
         """, unsafe_allow_html=True)
 
