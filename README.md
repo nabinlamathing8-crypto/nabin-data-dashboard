@@ -60,9 +60,9 @@ nabin-portfolio/
 
 I'm Nabin Kumar Thing, a data science learner focused on Python, data visualization, and machine learning basics. This portfolio tracks my progress and showcases my projects.
 
-- 🐙 GitHub: 
-- 💼 LinkedIn: [linkedin.com/in/yourprofile](https://linkedin.com/in/yourprofile)
-- 📧 Email: nabin@email.com
+- 🐙 GitHub: https://github.com/nabinlamathing8-crypto
+- 💼 LinkedIn: www.linkedin.com/in/nabin-kumar-thing-b92406393
+- 📧 Email: nabinlamathing8@gmail.com
 
 ---
 
