@@ -134,7 +134,6 @@ if page == "🏠  Home":
         """, unsafe_allow_html=True)
         st.markdown("<div style='margin-top:1.5rem'>", unsafe_allow_html=True)
         st.markdown("""
-        <a class='contact-btn' href='#'>📄 Download Resume</a>
         <a class='contact-btn outline' href='#'>💼 View Projects</a>
         """, unsafe_allow_html=True)
 
@@ -156,7 +155,7 @@ if page == "🏠  Home":
     c1, c2, c3, c4 = st.columns(4)
     for col, num, label in zip(
         [c1, c2, c3, c4],
-        ["5+", "3", "500+", "2025"],
+        ["5+", "3", "500+", "2026"],
         ["Projects", "Tools Mastered", "Rows Analyzed", "Learning Since"],
     ):
         col.metric(label, num)
@@ -214,6 +213,15 @@ elif page == "💼  Projects":
             "result": "Clear visualization showing vaccination impact on case decline.",
             "github": "https://github.com/yourusername/covid-tracker",
             "chart": "line",
+        },
+        {
+            "title": "Sales Data Analysis",
+            "tags": ["Pandas", "Matplotlib", "Python"],
+            "problem": "Identify top-selling products and monthly revenue trends.",
+            "method": "Grouped sales by category and month, built bar and line charts.",
+            "result": "Discovered Q4 sales peak — helped inform restocking decisions.",
+            "github": "https://github.com/yourusername/sales-analysis",
+            "chart": "bar",
         },
     ]
 
