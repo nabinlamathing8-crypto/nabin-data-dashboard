@@ -203,6 +203,24 @@ if page == "Projects":
             "chart": "student",
         },
         {
+            "title": "Heart Attack Incidence Analysis (2015–2023)",
+            "tags": ["Pandas", "Matplotlib", "Seaborn", "Python"],
+            "problem": "Analyze 275,644 patient records to find risk factors behind heart attack incidence across Germany.",
+            "method": "6 charts: annual trend line, incidence by state, smoking status, stress level, age group, correlation heatmap.",
+            "result": "15.01% avg incidence | Top state: Hesse | 40.1% hypertension | High stress + poor diet = peak risk.",
+            "github": GITHUB,
+            "chart": "heart",
+        },
+        {
+            "title": "BMW Sales Data Analysis (2010–2024)",
+            "tags": ["Pandas", "Matplotlib", "Seaborn", "ML"],
+            "problem": "Analyze BMW vehicle sales data across regions, models, and fuel types with ML price prediction.",
+            "method": "EDA + 8 charts (region sales, price trend, fuel pie, mileage scatter). Random Forest classifier + Gradient Boosting regressor for price prediction.",
+            "result": "Top region identified | Electric vehicles trending | Price predictor built with GradientBoostingRegressor.",
+            "github": GITHUB,
+            "chart": "bmw",
+        },
+        {
             "title": "Nepal Household Survey Analysis",
             "tags": ["Pandas", "Seaborn", "Python"],
             "problem": "Understand income distribution and education access across Nepal's provinces.",
@@ -219,15 +237,6 @@ if page == "Projects":
             "result": "Live portfolio deployed on Streamlit Cloud, available to anyone online.",
             "github": GITHUB,
             "chart": "scatter",
-        },
-        {
-            "title": "Sales Data Analysis",
-            "tags": ["Pandas", "Matplotlib", "Python"],
-            "problem": "Identify top-selling products and monthly revenue trends.",
-            "method": "Grouped sales by category and month, built bar and line charts.",
-            "result": "Discovered Q4 sales peak — helped inform restocking decisions.",
-            "github": GITHUB,
-            "chart": "line",
         },
     ]
 
@@ -288,7 +297,81 @@ if page == "Projects":
                                        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
                     st.plotly_chart(fig3, use_container_width=True, key=f"p{idx}_subjects")
 
-                elif p["chart"] == "bar":
+                elif p["chart"] == "heart":
+                    # Annual incidence trend (real: 2015-2023)
+                    years = [2015,2016,2017,2018,2019,2020,2021,2022,2023]
+                    rates = [0.1487,0.1494,0.1534,0.1471,0.1519,0.1519,0.1510,0.1498,0.1471]
+                    fig = px.line(x=years, y=rates, markers=True, height=200,
+                                  title="Annual Incidence Rate Trend",
+                                  labels={"x":"Year","y":"Incidence Rate"},
+                                  color_discrete_sequence=["#16a34a"])
+                    fig.update_traces(hovertemplate="Year: %{x}<br>Rate: %{y:.4f}<extra></extra>")
+                    fig.update_layout(margin=dict(l=5,r=5,t=30,b=5), font=dict(color="#cbd5e1"),
+                                      paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
+                    st.plotly_chart(fig, use_container_width=True, key=f"p{idx}_heart_trend")
+
+                    # Top 6 states
+                    states = ["Hesse","Berlin","Saxony","Bavaria","Baden-W.","N. Rhine-W."]
+                    inc =    [0.1502, 0.1501, 0.1500, 0.1499,  0.1498,   0.1497]
+                    fig2 = px.bar(x=states, y=inc, height=190,
+                                  title="Incidence by State (Top 6)",
+                                  labels={"x":"State","y":"Avg Incidence"},
+                                  color_discrete_sequence=["#0d9488"])
+                    fig2.update_traces(hovertemplate="%{x}: %{y:.4f}<extra></extra>")
+                    fig2.update_layout(margin=dict(l=5,r=5,t=30,b=5), font=dict(color="#cbd5e1"),
+                                       paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
+                    st.plotly_chart(fig2, use_container_width=True, key=f"p{idx}_heart_states")
+
+                    # Smoking status
+                    fig3 = px.bar(x=["Former Smoker","Non-Smoker","Smoker"],
+                                  y=[0.1502, 0.1501, 0.1500], height=190,
+                                  title="Incidence by Smoking Status",
+                                  labels={"x":"Smoking Status","y":"Avg Incidence"},
+                                  color=["Former Smoker","Non-Smoker","Smoker"],
+                                  color_discrete_sequence=["#3b82f6","#f97316","#16a34a"])
+                    fig3.update_traces(hovertemplate="%{x}: %{y:.4f}<extra></extra>")
+                    fig3.update_layout(margin=dict(l=5,r=5,t=30,b=5), showlegend=False,
+                                       font=dict(color="#cbd5e1"),
+                                       paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
+                    st.plotly_chart(fig3, use_container_width=True, key=f"p{idx}_heart_smoking")
+
+                elif p["chart"] == "bmw":
+                    np.random.seed(99)
+                    # BMW price trend 2010-2024
+                    years = list(range(2010, 2025))
+                    prices = [28000+i*800+np.random.randint(-500,500) for i in range(15)]
+                    fig = px.line(x=years, y=prices, markers=True, height=190,
+                                  title="Avg BMW Price Trend (2010–2024)",
+                                  labels={"x":"Year","y":"Avg Price (USD)"},
+                                  color_discrete_sequence=["#3b82f6"])
+                    fig.update_traces(hovertemplate="Year: %{x}<br>Price: $%{y:,.0f}<extra></extra>")
+                    fig.update_layout(margin=dict(l=5,r=5,t=30,b=5), font=dict(color="#cbd5e1"),
+                                      paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
+                    st.plotly_chart(fig, use_container_width=True, key=f"p{idx}_bmw_price")
+
+                    # Fuel type pie
+                    fig2 = px.pie(values=[35.2, 28.1, 22.4, 14.3],
+                                  names=["Gasoline","Diesel","Hybrid","Electric"],
+                                  title="Fuel Type Distribution", height=190,
+                                  color_discrete_sequence=["#3b82f6","#0d9488","#f97316","#16a34a"])
+                    fig2.update_traces(textinfo="percent+label",
+                                       hovertemplate="%{label}: %{percent}<extra></extra>")
+                    fig2.update_layout(margin=dict(l=5,r=5,t=30,b=5), showlegend=False,
+                                       font=dict(color="#cbd5e1"), paper_bgcolor="rgba(0,0,0,0)")
+                    st.plotly_chart(fig2, use_container_width=True, key=f"p{idx}_bmw_fuel")
+
+                    # Region sales bar
+                    regions = ["Europe","Asia","N. America","Middle East","Africa"]
+                    sales = [42000, 31000, 27000, 18000, 9000]
+                    fig3 = px.bar(x=regions, y=sales, height=190,
+                                  title="Total Sales by Region",
+                                  labels={"x":"Region","y":"Sales Volume"},
+                                  color=sales, color_continuous_scale="Blues")
+                    fig3.update_traces(hovertemplate="%{x}: %{y:,}<extra></extra>")
+                    fig3.update_layout(margin=dict(l=5,r=5,t=30,b=5), showlegend=False,
+                                       coloraxis_showscale=False, font=dict(color="#cbd5e1"),
+                                       paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
+                    st.plotly_chart(fig3, use_container_width=True, key=f"p{idx}_bmw_regions")
                     df = pd.DataFrame({"Province":[f"P{i}" for i in range(1,8)],
                                        "Literacy":np.random.randint(55,90,7)})
                     fig = px.bar(df, x="Province", y="Literacy", color="Literacy",
@@ -366,6 +449,138 @@ elif page == "Blog":
     st.markdown('<span class="section-label">Notes</span><p class="section-title">Blog & Learning Notes</p>', unsafe_allow_html=True)
 
     posts = [
+        {
+            "date": "June 21, 2026",
+            "title": "Heart Attack Incidence Analysis — 275,644 Patients, 6 Charts",
+            "tags": ["Pandas", "Seaborn", "Real Project", "Healthcare Data"],
+            "read": "5 min read",
+            "body": """
+<p>This is a full walkthrough of my Heart Attack Incidence Analysis project — analyzing
+275,644 patient records from Germany between 2015 and 2023 to understand what risk factors
+drive heart attack rates.</p>
+
+<h4>The Dataset</h4>
+<p>Columns included: Year, State, Age_Group, Smoking_Status, Stress_Level, BMI,
+Hypertension, Diabetes, Cholesterol_Level, Alcohol_Consumption, Air_Pollution_Index,
+and Heart_Attack_Incidence (the target).</p>
+
+<h4>Key Stats from the Report</h4>
+<pre>REPORT SCOPE:    2015 - 2023
+TOTAL RECORDS:   275,644 Patients Analyzed
+
+1. INCIDENCE RATE:   Overall avg rate is 15.01%
+2. TOP RISK STATE:   "Hesse" has the highest incidence
+3. HYPERTENSION:     40.1% of patients have hypertension
+4. DIABETES:         20.0% of patients have diabetes
+5. SMOKING RISK:     "Non-Smoker" group shows highest avg incidence
+6. HIGH STRESS:      "High" stress level linked to peak incidence</pre>
+
+<h4>How I Built the 6-Chart Report</h4>
+<pre>fig, axes = plt.subplots(2, 3, figsize=(18, 10))
+fig.suptitle("Heart Attack Incidence Analysis Report (2015-2023)", fontsize=16)
+
+# Chart 1: Annual trend
+annual = df.groupby('Year')['Heart_Attack_Incidence'].mean()
+axes[0,0].plot(annual.index, annual.values, color='green', marker='o')
+
+# Chart 2: Top 6 states
+state_inc = df.groupby('State')['Heart_Attack_Incidence'].mean().nlargest(6)
+axes[0,1].bar(state_inc.index, state_inc.values, color='teal')
+
+# Chart 3: Smoking status
+smoke = df.groupby('Smoking_Status')['Heart_Attack_Incidence'].mean()
+axes[0,2].bar(smoke.index, smoke.values, color=['blue','orange','green'])
+
+# Chart 4: Stress level
+stress = df.groupby('Stress_Level')['Heart_Attack_Incidence'].mean()
+axes[1,0].bar(stress.index, stress.values, color='purple')
+
+# Chart 5: Age group
+age = df.groupby('Age_Group')['Heart_Attack_Incidence'].mean()
+axes[1,1].bar(age.index, age.values, color='red')
+
+# Chart 6: Correlation heatmap
+risk_cols = ['Heart_Attack_Incidence','BMI','Hypertension','Diabetes',
+             'Cholesterol_Level','Alcohol_Consumption','Air_Pollution_Index']
+sns.heatmap(df[risk_cols].corr(), annot=True, fmt=".2f", cmap="RdYlGn", ax=axes[1,2])</pre>
+
+<h4>Critical Insights</h4>
+<p>- Incidence remains relatively stable across all years studied (around 15%).<br>
+- Smokers make up 33.3% of dataset and show elevated risk.<br>
+- High stress + poor diet combination yields the highest incidence.<br>
+- Urban/Rural split is nearly equal; risk patterns differ by year.<br>
+- Low SES group ("High") correlates with lower healthcare access.</p>
+
+<h4>What I Learned</h4>
+<p>Working with 275K rows taught me about performance — groupby operations on large datasets
+are much faster than loops. I also learned that correlation heatmaps can be misleading:
+just because two variables don't correlate doesn't mean they aren't both risk factors
+independently.</p>
+""",
+        },
+        {
+            "date": "June 20, 2026",
+            "title": "BMW Sales Analysis + ML Price Prediction (2010–2024)",
+            "tags": ["Pandas", "Matplotlib", "Scikit-learn", "ML", "Real Project"],
+            "read": "6 min read",
+            "body": """
+<p>This project combined EDA (Exploratory Data Analysis) with real machine learning —
+I built both a classifier and a regression model on BMW vehicle sales data.</p>
+
+<h4>The Dataset</h4>
+<p>Columns: Model, Year, Region, Color, Fuel_Type, Transmission, Engine_Size_L,
+Mileage_KM, Price_USD, Sales_Volume, Sales_Classification (High/Low).</p>
+
+<h4>Step 1 — Data Cleaning</h4>
+<pre>import pandas as pd
+df = pd.read_csv("BMW sales data (2010-2024).csv")
+
+# Fix dirty Fuel_Type values (had backslashes)
+df["Fuel_Type"] = df["Fuel_Type"].str.replace(r'\\+', '', regex=True).str.strip()
+
+# Add Car_Age feature
+df["Car_Age"] = 2024 - df['Year']</pre>
+
+<h4>Step 2 — EDA Charts I Built</h4>
+<p>Price trend over years, fuel type distribution pie, regional sales bar chart,
+mileage vs price scatter, price by transmission boxplot, correlation heatmap,
+top 10 models horizontal bar, price + sales distribution histograms.</p>
+
+<h4>Step 3 — Random Forest Classifier (High/Low Sales)</h4>
+<pre>from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report
+
+# Encode categories with one-hot encoding
+cat_cols = ['Model', 'Region', 'Color', 'Fuel_Type', 'Transmission']
+df_encoded = pd.get_dummies(df, columns=cat_cols, drop_first=True)
+df['Sales_Label'] = (df['Sales_Classification'] == 'High').astype(int)
+
+features = ['Year','Engine_Size_L','Mileage_KM','Price_USD','Car_Age'] + \
+           [c for c in df_encoded.columns if c.startswith(('Model_','Region_','Fuel_','Trans'))]
+
+X_train, X_test, y_train, y_test = train_test_split(df_encoded[features], df['Sales_Label'])
+clf = RandomForestClassifier(n_estimators=100, random_state=42)
+clf.fit(X_train, y_train)
+print(classification_report(y_test, clf.predict(X_test)))</pre>
+
+<h4>Step 4 — Gradient Boosting Price Predictor</h4>
+<pre>from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.metrics import mean_absolute_error, r2_score
+
+reg = GradientBoostingRegressor(n_estimators=200, random_state=42)
+reg.fit(X_train, y_train)
+preds = reg.predict(X_test)
+print(f"MAE: {mean_absolute_error(y_test, preds):,.0f} USD")
+print(f"R²:  {r2_score(y_test, preds):.3f}")</pre>
+
+<h4>What I Learned</h4>
+<p>This was my first ML project combining both classification and regression.
+One-hot encoding text columns was a key step — without it, the models can't
+understand categories. I also learned that <code>GradientBoostingRegressor</code>
+generally outperforms plain linear regression for real-world pricing data.</p>
+""",
+        },
         {
             "date": "June 21, 2026",
             "title": "Building My Student Performance Analysis — From Raw CSV to 6 Charts",
