@@ -58,9 +58,9 @@ nabin-portfolio/
 
 ## 👤 About Me
 
-I'm Nabin Lama, a data science learner focused on Python, data visualization, and machine learning basics. This portfolio tracks my progress and showcases my projects.
+I'm Nabin Kumar Thing, a data science learner focused on Python, data visualization, and machine learning basics. This portfolio tracks my progress and showcases my projects.
 
-- 🐙 GitHub: [github.com/yourusername](https://github.com/yourusername)
+- 🐙 GitHub: 
 - 💼 LinkedIn: [linkedin.com/in/yourprofile](https://linkedin.com/in/yourprofile)
 - 📧 Email: nabin@email.com
 
