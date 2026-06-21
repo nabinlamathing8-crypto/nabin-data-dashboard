@@ -256,6 +256,7 @@ elif page == "💼  Projects":
                         color=scores, color_continuous_scale="Greens", height=220,
                         title="Avg Score by Grade"
                     )
+                    fig.update_traces(hovertemplate="Grade: %{x}<br>Avg Score: %{y}<extra></extra>")
                 elif p["chart"] == "bar":
                     df = pd.DataFrame({"Province": [f"P{i}" for i in range(1, 8)],
                                        "Literacy": np.random.randint(55, 90, 7)})
