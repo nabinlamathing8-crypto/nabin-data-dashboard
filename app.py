@@ -637,6 +637,127 @@ def build_eda_package(df):
     return summary, charts
 
 
+def generate_python_report(df, summary, filename="dataset.csv"):
+    """
+    Builds a complete EDA report from pure Python/Pandas — no API key needed.
+    100% matched to the actual uploaded file.
+    """
+    num_cols = summary["num_cols"]
+    cat_cols = summary["cat_cols"]
+    lines = []
+    a = lines.append
+
+    a(f"EDA REPORT — {filename.upper()}")
+    a("=" * 60)
+    a(f"Generated: {pd.Timestamp.now().strftime('%Y-%m-%d %H:%M')}")
+    a("")
+
+    # ── Section 1: Overview ──────────────────────────────────────
+    a("## 1. DATASET OVERVIEW")
+    a(f"  File            : {filename}")
+    a(f"  Shape           : {df.shape[0]:,} rows × {df.shape[1]} columns")
+    a(f"  Numeric columns : {len(num_cols)}  → {', '.join(num_cols) if num_cols else 'none'}")
+    a(f"  Categorical cols: {len(cat_cols)}  → {', '.join(cat_cols) if cat_cols else 'none'}")
+    a(f"  Missing values  : {summary['missing']:,} cells ({summary['missing_pct']})")
+    a(f"  Duplicate rows  : {summary['duplicates']:,}")
+    a(f"  Memory usage    : {df.memory_usage(deep=True).sum() / 1024:.1f} KB")
+    a("")
+
+    # ── Section 2: Data Quality ──────────────────────────────────
+    a("## 2. DATA QUALITY ASSESSMENT")
+    if summary["col_missing"]:
+        a("  Columns with missing values:")
+        for col, cnt in sorted(summary["col_missing"].items(), key=lambda x: -x[1]):
+            pct = cnt / len(df) * 100
+            a(f"    • {col:<30} {cnt:>6,} missing  ({pct:.1f}%)")
+    else:
+        a("  ✓ No missing values found — dataset is complete.")
+    a(f"  ✓ Duplicates: {summary['duplicates']} row(s)")
+    a(f"  Column dtypes: { {str(k): int(v) for k,v in summary['dtypes'].items()} }")
+    a("")
+
+    # ── Section 3: Numeric Stats ─────────────────────────────────
+    if num_cols:
+        a("## 3. NUMERIC COLUMN STATISTICS")
+        desc = df[num_cols].describe()
+        for col in num_cols:
+            s = desc[col]
+            skew = df[col].skew()
+            kurt = df[col].kurtosis()
+            q1   = s["25%"]; q3 = s["75%"]; iqr = q3 - q1
+            outliers = int(((df[col] < q1 - 1.5*iqr) | (df[col] > q3 + 1.5*iqr)).sum())
+            a(f"  ── {col}")
+            a(f"     Count   : {int(s['count']):,}   |  Nulls: {int(df[col].isnull().sum()):,}")
+            a(f"     Mean    : {s['mean']:.4f}   |  Std Dev: {s['std']:.4f}")
+            a(f"     Min     : {s['min']:.4f}   |  Max: {s['max']:.4f}")
+            a(f"     Q1      : {q1:.4f}   |  Median: {s['50%']:.4f}   |  Q3: {q3:.4f}")
+            a(f"     IQR     : {iqr:.4f}   |  Outliers (IQR): {outliers}")
+            a(f"     Skewness: {skew:.4f}   |  Kurtosis: {kurt:.4f}")
+            skew_note = "right-skewed (tail right)" if skew > 0.5 else "left-skewed (tail left)" if skew < -0.5 else "approximately symmetric"
+            a(f"     Shape   : {skew_note}")
+            a("")
+
+    # ── Section 4: Categorical Stats ────────────────────────────
+    if cat_cols:
+        a("## 4. CATEGORICAL COLUMN ANALYSIS")
+        for col in cat_cols:
+            vc = df[col].value_counts()
+            top3 = vc.head(3)
+            a(f"  ── {col}")
+            a(f"     Unique values : {df[col].nunique():,}")
+            a(f"     Missing       : {df[col].isnull().sum():,}")
+            a(f"     Most common   : {top3.index[0]} ({top3.iloc[0]:,} rows, {top3.iloc[0]/len(df)*100:.1f}%)")
+            if len(top3) > 1:
+                a(f"     2nd           : {top3.index[1]} ({top3.iloc[1]:,} rows, {top3.iloc[1]/len(df)*100:.1f}%)")
+            if len(top3) > 2:
+                a(f"     3rd           : {top3.index[2]} ({top3.iloc[2]:,} rows, {top3.iloc[2]/len(df)*100:.1f}%)")
+            a("")
+
+    # ── Section 5: Correlations ──────────────────────────────────
+    if len(num_cols) >= 2:
+        a("## 5. CORRELATION ANALYSIS")
+        corr = df[num_cols].corr()
+        # Find strongest pairs
+        pairs = []
+        for i in range(len(num_cols)):
+            for j in range(i+1, len(num_cols)):
+                c1, c2 = num_cols[i], num_cols[j]
+                r = corr.loc[c1, c2]
+                pairs.append((abs(r), r, c1, c2))
+        pairs.sort(reverse=True)
+        a("  Strongest correlations:")
+        for _, r, c1, c2 in pairs[:8]:
+            strength = "strong" if abs(r) > 0.7 else "moderate" if abs(r) > 0.4 else "weak"
+            direction = "positive" if r > 0 else "negative"
+            a(f"    • {c1}  ↔  {c2}:  r = {r:.3f}  ({strength} {direction})")
+        a("")
+
+    # ── Section 6: Recommendations ──────────────────────────────
+    a("## 6. RECOMMENDATIONS & NEXT STEPS")
+    recs = []
+    if summary["missing"] > 0:
+        recs.append("Handle missing values: use median/mode imputation or drop rows depending on % missing.")
+    if summary["duplicates"] > 0:
+        recs.append(f"Remove {summary['duplicates']} duplicate row(s) with df.drop_duplicates().")
+    for col in num_cols:
+        skew = abs(df[col].skew())
+        if skew > 1.5:
+            recs.append(f"Column '{col}' is highly skewed (skew={skew:.2f}) — consider log transform.")
+    if len(num_cols) >= 2:
+        for _, r, c1, c2 in pairs[:3]:
+            if abs(r) > 0.7:
+                recs.append(f"Strong correlation between '{c1}' and '{c2}' (r={r:.2f}) — potential multicollinearity if used in ML.")
+    if not recs:
+        recs.append("Dataset looks clean. Ready for modeling or deeper analysis.")
+    for rec in recs:
+        a(f"  → {rec}")
+    a("")
+    a("=" * 60)
+    a("END OF REPORT")
+
+    return "\n".join(lines)
+
+
 def generate_ai_report(df, summary):
     """Ask Claude to write a full analyst-style report based on the real data."""
     if not client:
@@ -647,7 +768,6 @@ def generate_ai_report(df, summary):
     missing   = summary["col_missing"]
     dups      = summary["duplicates"]
 
-    # Build a rich context from the actual dataframe
     head_str  = df.head(5).to_string()
     col_types = df.dtypes.to_string()
 
@@ -1009,121 +1129,196 @@ elif page == "Playground":
         # ── Build everything ──────────────────────────────────────
         summary, charts = build_eda_package(df)
 
-        # ── Group charts by section ───────────────────────────────
-        from collections import defaultdict
-        grouped = defaultdict(list)
-        for section, label, fig in charts:
-            grouped[section].append((label, fig))
+        # ── Separate charts into named buckets ────────────────────
+        heatmap_charts  = [(l,f) for s,l,f in charts if s == "📊 Heatmap"]
+        hist_charts     = [(l,f) for s,l,f in charts if s == "📈 Histograms"]
+        box_charts      = [(l,f) for s,l,f in charts if s == "📦 Box Plots"]
+        bar_charts      = [(l,f) for s,l,f in charts if s == "📊 Bar Charts"]
+        pie_charts      = [(l,f) for s,l,f in charts if s == "🥧 Pie Charts"]
+        scatter_charts  = [(l,f) for s,l,f in charts if s == "🔵 Scatter Plots"]
+        line_charts     = [(l,f) for s,l,f in charts if s == "📉 Line Charts"]
+        violin_charts   = [(l,f) for s,l,f in charts if s == "🎻 Violin Plots"]
 
-        # ── Main tabs ─────────────────────────────────────────────
-        tab_names = ["📋 Data", "📊 Summary Stats"] + list(grouped.keys()) + ["🤖 AI Report"]
-        tabs = st.tabs(tab_names)
+        def render_chart_grid(chart_list, key_prefix):
+            """Render charts 2-per-row."""
+            if not chart_list:
+                st.info("No charts available for this column type in your dataset.")
+                return
+            for i in range(0, len(chart_list), 2):
+                c1, c2 = st.columns(2)
+                with c1:
+                    st.plotly_chart(chart_list[i][1], use_container_width=True,
+                                    key=f"{key_prefix}_{i}_a")
+                if i + 1 < len(chart_list):
+                    with c2:
+                        st.plotly_chart(chart_list[i+1][1], use_container_width=True,
+                                        key=f"{key_prefix}_{i}_b")
 
-        # TAB 0 — Raw data preview
-        with tabs[0]:
+        # ── Fixed tab list — always the same order ─────────────────
+        (tab_data, tab_stats, tab_hist, tab_box,
+         tab_bar, tab_pie, tab_scatter, tab_line,
+         tab_violin, tab_heatmap, tab_report) = st.tabs([
+            "📋 Data",
+            "📊 Summary Stats",
+            f"📈 Histograms ({len(hist_charts)})",
+            f"📦 Box Plots ({len(box_charts)})",
+            f"📊 Bar Charts ({len(bar_charts)})",
+            f"🥧 Pie Charts ({len(pie_charts)})",
+            f"🔵 Scatter ({len(scatter_charts)})",
+            f"📉 Line ({len(line_charts)})",
+            f"🎻 Violin ({len(violin_charts)})",
+            f"🌡️ Heatmap ({len(heatmap_charts)})",
+            "🤖 AI Report",
+        ])
+
+        # ── TAB: Data ─────────────────────────────────────────────
+        with tab_data:
             st.markdown('<span class="sec-eyebrow">// first 100 rows</span>', unsafe_allow_html=True)
             st.dataframe(df.head(100), use_container_width=True)
             st.markdown("<br>", unsafe_allow_html=True)
-
-            # Column info table
             st.markdown('<span class="sec-eyebrow">// column info</span>', unsafe_allow_html=True)
             info_df = pd.DataFrame({
-                "Column":   df.columns,
+                "Column":   list(df.columns),
                 "Dtype":    [str(df[c].dtype) for c in df.columns],
-                "Non-Null": [df[c].count() for c in df.columns],
-                "Null":     [df[c].isnull().sum() for c in df.columns],
+                "Non-Null": [int(df[c].count()) for c in df.columns],
+                "Null":     [int(df[c].isnull().sum()) for c in df.columns],
                 "Null %":   [f"{df[c].isnull().mean()*100:.1f}%" for c in df.columns],
-                "Unique":   [df[c].nunique() for c in df.columns],
+                "Unique":   [int(df[c].nunique()) for c in df.columns],
                 "Sample":   [str(df[c].dropna().iloc[0]) if df[c].count() > 0 else "—" for c in df.columns],
             })
             st.dataframe(info_df, use_container_width=True, hide_index=True)
-
-            # Missing value bar chart
             if missing_total > 0:
                 st.markdown("<br>", unsafe_allow_html=True)
                 st.markdown('<span class="sec-eyebrow">// missing values per column</span>', unsafe_allow_html=True)
                 miss_s = df.isnull().sum()
                 miss_s = miss_s[miss_s > 0].sort_values(ascending=False)
-                fig_miss = px.bar(
-                    x=miss_s.index.tolist(), y=miss_s.values,
-                    labels={"x": "Column", "y": "Missing Count"},
-                    color=miss_s.values, color_continuous_scale="Reds",
-                    title="Missing Values per Column"
-                )
+                fig_miss = px.bar(x=miss_s.index.tolist(), y=miss_s.values,
+                                  labels={"x": "Column", "y": "Missing Count"},
+                                  color=miss_s.values, color_continuous_scale="Reds",
+                                  title="Missing Values per Column")
                 style_fig(fig_miss, 260)
                 st.plotly_chart(fig_miss, use_container_width=True, key="miss_bar")
 
-        # TAB 1 — Summary stats
-        with tabs[1]:
+        # ── TAB: Summary Stats ────────────────────────────────────
+        with tab_stats:
             if summary["describe"] is not None:
-                st.markdown('<span class="sec-eyebrow">// descriptive statistics — numeric</span>', unsafe_allow_html=True)
+                st.markdown('<span class="sec-eyebrow">// descriptive statistics — numeric columns</span>', unsafe_allow_html=True)
                 st.dataframe(summary["describe"].style.format("{:.3f}"), use_container_width=True)
-
             if cat_cols:
                 st.markdown("<br>", unsafe_allow_html=True)
-                st.markdown('<span class="sec-eyebrow">// categorical columns — value counts</span>', unsafe_allow_html=True)
+                st.markdown('<span class="sec-eyebrow">// categorical value counts</span>', unsafe_allow_html=True)
                 for cc in cat_cols:
-                    vc = df[cc].value_counts().head(10).reset_index()
+                    vc = df[cc].value_counts().head(15).reset_index()
                     vc.columns = [cc, "Count"]
                     vc["Percent"] = (vc["Count"] / len(df) * 100).round(1).astype(str) + "%"
                     with st.expander(f"📂  {cc}  —  {df[cc].nunique()} unique values"):
                         st.dataframe(vc, use_container_width=True, hide_index=True)
 
-        # TAB 2..N — Chart sections
-        for tab_idx, section_name in enumerate(grouped.keys()):
-            section_charts = grouped[section_name]
-            with tabs[tab_idx + 2]:
-                st.markdown(f'<span class="sec-eyebrow">// {section_name.lower()} — {len(section_charts)} chart(s)</span>', unsafe_allow_html=True)
-                st.markdown("<br>", unsafe_allow_html=True)
-                # Render 2 per row
-                for i in range(0, len(section_charts), 2):
-                    fc1, fc2 = st.columns(2)
-                    lbl1, fig1 = section_charts[i]
-                    with fc1:
-                        st.plotly_chart(fig1, use_container_width=True, key=f"ch_{tab_idx}_{i}_a")
-                    if i + 1 < len(section_charts):
-                        lbl2, fig2 = section_charts[i + 1]
-                        with fc2:
-                            st.plotly_chart(fig2, use_container_width=True, key=f"ch_{tab_idx}_{i}_b")
+        # ── TAB: Histograms ───────────────────────────────────────
+        with tab_hist:
+            st.markdown('<span class="sec-eyebrow">// distribution of every numeric column</span>', unsafe_allow_html=True)
+            st.markdown("<br>", unsafe_allow_html=True)
+            render_chart_grid(hist_charts, "hist")
 
-        # LAST TAB — AI Report
-        with tabs[-1]:
-            st.markdown('<span class="sec-eyebrow">// ai analyst report — powered by claude</span>', unsafe_allow_html=True)
+        # ── TAB: Box Plots ────────────────────────────────────────
+        with tab_box:
+            st.markdown('<span class="sec-eyebrow">// outliers & spread — numeric columns</span>', unsafe_allow_html=True)
+            st.markdown("<br>", unsafe_allow_html=True)
+            render_chart_grid(box_charts, "box")
+
+        # ── TAB: Bar Charts ───────────────────────────────────────
+        with tab_bar:
+            st.markdown('<span class="sec-eyebrow">// frequency — categorical columns</span>', unsafe_allow_html=True)
+            st.markdown("<br>", unsafe_allow_html=True)
+            render_chart_grid(bar_charts, "bar")
+
+        # ── TAB: Pie Charts ───────────────────────────────────────
+        with tab_pie:
+            st.markdown('<span class="sec-eyebrow">// proportion — low-cardinality categorical cols (≤12 unique)</span>', unsafe_allow_html=True)
+            st.markdown("<br>", unsafe_allow_html=True)
+            render_chart_grid(pie_charts, "pie")
+
+        # ── TAB: Scatter Plots ────────────────────────────────────
+        with tab_scatter:
+            st.markdown('<span class="sec-eyebrow">// relationships between numeric column pairs</span>', unsafe_allow_html=True)
+            st.markdown("<br>", unsafe_allow_html=True)
+            render_chart_grid(scatter_charts, "sc")
+
+        # ── TAB: Line Charts ──────────────────────────────────────
+        with tab_line:
+            st.markdown('<span class="sec-eyebrow">// trends along ordered numeric axis</span>', unsafe_allow_html=True)
+            st.markdown("<br>", unsafe_allow_html=True)
+            render_chart_grid(line_charts, "ln")
+
+        # ── TAB: Violin Plots ─────────────────────────────────────
+        with tab_violin:
+            st.markdown('<span class="sec-eyebrow">// distribution shape + density — numeric columns</span>', unsafe_allow_html=True)
+            st.markdown("<br>", unsafe_allow_html=True)
+            render_chart_grid(violin_charts, "vl")
+
+        # ── TAB: Heatmap ──────────────────────────────────────────
+        with tab_heatmap:
+            st.markdown('<span class="sec-eyebrow">// correlation between all numeric columns</span>', unsafe_allow_html=True)
+            st.markdown("<br>", unsafe_allow_html=True)
+            render_chart_grid(heatmap_charts, "hm")
+
+        # ── TAB: AI Report ────────────────────────────────────────
+        with tab_report:
+            st.markdown('<span class="sec-eyebrow">// analyst report — auto-generated from your file</span>', unsafe_allow_html=True)
             st.markdown("""
             <div class='dp-card' style='margin-bottom:1.2rem'>
               <div style='font-size:13px;color:#4a6080;line-height:1.7'>
-                Claude reads your actual column names, values, and statistics —
-                then writes a professional data analyst report specific to your file.
+                Generates a full professional EDA report using the real column names,
+                actual statistics, and values from your uploaded file. Works instantly —
+                no API key needed. Claude AI adds deeper insights if key is available.
               </div>
             </div>
             """, unsafe_allow_html=True)
 
-            if not client:
-                st.warning("⚠️ Add ANTHROPIC_API_KEY to Streamlit secrets to enable AI reports.")
-            else:
-                if st.button("🤖 Generate AI Report", type="primary", key="gen_report"):
-                    with st.spinner("Claude is reading your data and writing the report..."):
-                        report_text = generate_ai_report(df, summary)
-                    st.session_state["pg_report"] = report_text
+            if st.button("📄 Generate Report", type="primary", key="gen_report"):
+                with st.spinner("Building your report..."):
+                    # Always generate the pure-Python report first
+                    py_report = generate_python_report(df, summary, uploaded.name)
+                    # Try AI enhancement if available
+                    if client:
+                        ai_text = generate_ai_report(df, summary)
+                        final_report = py_report + "\n\n" + "─"*60 + "\n\n## 🤖 AI ANALYST INSIGHTS (Claude)\n\n" + ai_text
+                    else:
+                        final_report = py_report
+                st.session_state["pg_report"] = final_report
+                st.session_state["pg_report_name"] = uploaded.name
 
-                if "pg_report" in st.session_state and st.session_state["pg_report"]:
-                    report = st.session_state["pg_report"]
-                    # Render nicely in dark theme
-                    # Convert markdown sections to HTML-safe display
-                    st.markdown(
-                        f"<div class='blog-body-inner' style='font-size:13.5px;line-height:1.85'>"
-                        f"{report.replace(chr(10), '<br>').replace('## ', '<h4>').replace('<h4>', '<h4 style=\"color:#e8f0ff;margin:18px 0 8px\">')}"
-                        f"</div>",
-                        unsafe_allow_html=True
-                    )
-                    # Download button
-                    st.download_button(
-                        label="📥 Download Report (.txt)",
-                        data=report,
-                        file_name=f"eda_report_{uploaded.name.replace('.csv','')}.txt",
-                        mime="text/plain",
-                        key="dl_report"
-                    )
+            if st.session_state.get("pg_report"):
+                report = st.session_state["pg_report"]
+                fname  = st.session_state.get("pg_report_name", "dataset")
+
+                # Render as styled dark card
+                rendered = report.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+                # Re-apply headings
+                lines_r = []
+                for ln in rendered.split("\n"):
+                    if ln.startswith("## "):
+                        lines_r.append(f"<h4 style='color:#3b82f6;font-family:JetBrains Mono,monospace;font-size:13px;letter-spacing:0.1em;margin:20px 0 8px;text-transform:uppercase'>{ln[3:]}</h4>")
+                    elif ln.startswith("### "):
+                        lines_r.append(f"<h4 style='color:#e8f0ff;font-size:13px;margin:14px 0 6px'>{ln[4:]}</h4>")
+                    elif ln.startswith("─"):
+                        lines_r.append("<hr style='border-color:#1a2744;margin:16px 0'>")
+                    elif ln.strip() == "":
+                        lines_r.append("<br>")
+                    else:
+                        lines_r.append(f"<span style='font-size:13px;color:#8899bb;line-height:1.8'>{ln}</span><br>")
+                st.markdown(
+                    f"<div class='blog-body-inner' style='font-size:13px;line-height:1.8;padding:1.4rem'>{''.join(lines_r)}</div>",
+                    unsafe_allow_html=True
+                )
+                st.markdown("<br>", unsafe_allow_html=True)
+                st.download_button(
+                    label="📥 Download Full Report (.txt)",
+                    data=report,
+                    file_name=f"eda_report_{fname.replace('.csv','')}.txt",
+                    mime="text/plain",
+                    key="dl_report"
+                )
     else:
         st.markdown("""
         <div style='text-align:center;padding:4rem 2rem;color:#2a3a55;
