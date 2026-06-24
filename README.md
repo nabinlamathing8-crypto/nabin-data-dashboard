@@ -1,69 +1,49 @@
-# 📊 Nabin Lama | Data Science Portfolio
+# Nabin Kumar Thing — Data Science Portfolio
 
-A personal portfolio and learning hub built with **Python + Streamlit**.
+A sleek, feature-rich data science portfolio built with Streamlit.
 
-🔗 **Live Site:** [nabin-portfolio.streamlit.app](https://nabin-portfolio.streamlit.app)
+## Features
 
----
+| Feature | Description |
+|---|---|
+| 🏠 Home | Hero section, live GitHub stats, skill bars |
+| 💼 Projects | Tag-filtered project cards with inline charts |
+| ✨ AI Summary | Claude AI generates recruiter-friendly project summaries |
+| ⚡ Skills | Skill bars + radar chart |
+| 📅 Timeline | Learning journey + session analytics |
+| 📝 Blog | Expandable blog posts with code blocks |
+| 🧪 Playground | Upload any CSV → instant auto-EDA (no code needed) |
+| 🤖 AI Chat | Ask-my-portfolio chatbot powered by Claude |
+| 📬 Contact | Contact card + message form |
 
-## 📌 What's Inside
-
-| Page | Description |
-|------|-------------|
-| 🏠 Home | Introduction, stats, and learning timeline |
-| 💼 Projects | Data science projects with charts and GitHub links |
-| 🛠️ Skills | Progress bars, radar chart, tools I'm learning |
-| 📝 Blog | Notes and writeups from my learning journey |
-| 📬 Contact | Links and contact form |
-
----
-
-## 🚀 Run Locally
+## Setup
 
 ```bash
-# 1. Clone the repo
-git clone https://github.com/yourusername/nabin-portfolio
-
-# 2. Install dependencies
+# 1. Install dependencies
 pip install -r requirements.txt
 
-# 3. Run the app
+# 2. Add your Anthropic API key (for AI features)
+cp .streamlit/secrets.toml.example .streamlit/secrets.toml
+# Edit secrets.toml and add your key
+
+# 3. Run locally
 streamlit run app.py
 ```
 
-Then open `http://localhost:8501` in your browser.
+## Deploy to Streamlit Cloud
 
----
+1. Push to GitHub
+2. Go to share.streamlit.io → New app → select your repo
+3. Add `ANTHROPIC_API_KEY` in the Secrets section of the app settings
+4. Deploy!
 
-## 🛠️ Built With
+## AI Features Setup
 
-- [Python](https://python.org)
-- [Streamlit](https://streamlit.io) — web framework
-- [Plotly](https://plotly.com) — interactive charts
-- [Pandas](https://pandas.pydata.org) — data handling
-- [NumPy](https://numpy.org) — numerical computing
+The AI Chat and AI Project Summary require an Anthropic API key:
+- Get one at https://console.anthropic.com
+- Add it to `.streamlit/secrets.toml` as `ANTHROPIC_API_KEY`
+- Without a key, the app still works — AI features show a friendly message
 
----
+## Live Demo
 
-## 📁 Project Structure
-
-```
-nabin-portfolio/
-├── app.py            # Main Streamlit app (all pages)
-├── requirements.txt  # Python dependencies
-└── README.md         # This file
-```
-
----
-
-## 👤 About Me
-
-I'm Nabin Kumar Thing, a data science learner focused on Python, data visualization, and machine learning basics. This portfolio tracks my progress and showcases my projects.
-
-- 🐙 GitHub: https://github.com/nabinlamathing8-crypto
-- 💼 LinkedIn: www.linkedin.com/in/nabin-kumar-thing-b92406393
-- 📧 Email: nabinlamathing8@gmail.com
-
----
-
-⭐ *If you found this helpful, give it a star!*
+https://nabin-thing.streamlit.app
