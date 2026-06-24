@@ -1,4 +1,3 @@
-%pip install anthropic
 
 import streamlit as st
 import pandas as pd
@@ -10,7 +9,6 @@ import json
 import io
 import time
 from datetime import datetime
-from anthropic import Anthropic
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 GITHUB_USER = "nabinlamathing8-crypto"
